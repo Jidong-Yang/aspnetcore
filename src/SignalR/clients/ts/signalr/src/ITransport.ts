@@ -29,4 +29,6 @@ export interface ITransport {
     stop(): Promise<void>;
     onreceive: ((data: string | ArrayBuffer) => void) | null;
     onclose: ((error?: Error) => void) | null;
+    /** Event when an connection is successfully upgraded to a WebSocket. */
+    onupgrade: ((upgradeEvent: Event) => void) | null;
 }

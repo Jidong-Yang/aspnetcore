@@ -16,4 +16,6 @@ export interface IConnection {
 
     onreceive: ((data: string | ArrayBuffer) => void) | null;
     onclose: ((error?: Error) => void) | null;
+    /** Event when a connection is successfully upgraded to a WebSocket. */
+    onupgrade: ((upgradeEvent: Event) => void) | null;
 }

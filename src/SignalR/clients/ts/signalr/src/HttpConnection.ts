@@ -66,6 +66,7 @@ export class HttpConnection implements IConnection {
     public connectionId?: string;
     public onreceive: ((data: string | ArrayBuffer) => void) | null;
     public onclose: ((e?: Error) => void) | null;
+    public onupgrade: ((upgradeEvent: Event) => void) | null;
 
     private readonly _negotiateVersion: number = 1;
 
@@ -115,6 +116,7 @@ export class HttpConnection implements IConnection {
 
         this.onreceive = null;
         this.onclose = null;
+        this.onupgrade = null;
     }
 
     public start(): Promise<void>;
@@ -436,6 +438,7 @@ export class HttpConnection implements IConnection {
 
     private _startTransport(url: string, transferFormat: TransferFormat): Promise<void> {
         this.transport!.onreceive = this.onreceive;
+        this.transport!.onupgrade = this.onupgrade;
         if (this.features.reconnect) {
             this.transport!.onclose = async (e) => {
                 let callStop = false;

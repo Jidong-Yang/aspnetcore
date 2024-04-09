@@ -24,6 +24,7 @@ export class LongPollingTransport implements ITransport {
 
     public onreceive: ((data: string | ArrayBuffer) => void) | null;
     public onclose: ((error?: Error | unknown) => void) | null;
+    public onupgrade: ((upgradeEvent: Event) => void) | null;
 
     // This is an internal type, not exported from 'index' so this is really just internal.
     public get pollAborted(): boolean {
@@ -40,6 +41,7 @@ export class LongPollingTransport implements ITransport {
 
         this.onreceive = null;
         this.onclose = null;
+        this.onupgrade = null;
     }
 
     public async connect(url: string, transferFormat: TransferFormat): Promise<void> {

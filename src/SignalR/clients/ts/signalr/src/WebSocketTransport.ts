@@ -21,6 +21,7 @@ export class WebSocketTransport implements ITransport {
 
     public onreceive: ((data: string | ArrayBuffer) => void) | null;
     public onclose: ((error?: Error) => void) | null;
+    public onupgrade: ((upgradeEvent: Event) => void) | null;
 
     constructor(httpClient: HttpClient, accessTokenFactory: (() => string | Promise<string>) | undefined, logger: ILogger,
                 logMessageContent: boolean, webSocketConstructor: WebSocketConstructor, headers: MessageHeaders) {
@@ -32,6 +33,7 @@ export class WebSocketTransport implements ITransport {
 
         this.onreceive = null;
         this.onclose = null;
+        this.onupgrade = null;
         this._headers = headers;
     }
 
@@ -136,6 +138,18 @@ export class WebSocketTransport implements ITransport {
                     reject(new Error(error));
                 }
             };
+
+            // listen to the 'upgrade' event sent back from the server, when the underlying http connection is successfully upgraded to WebSocket.
+            webSocket.addEventListener('upgrade', (socketUpgradeEvent: Event) => {
+                if (this.onupgrade) {
+                    try {
+                        this.onupgrade(socketUpgradeEvent);
+                    } catch (error) {
+                        this._close(error);
+                        return;
+                    }
+                }
+            });
         });
     }
 

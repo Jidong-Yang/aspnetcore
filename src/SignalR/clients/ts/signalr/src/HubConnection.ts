@@ -50,6 +50,8 @@ export class HubConnection {
     private _reconnectingCallbacks: ((error?: Error) => void)[];
     private _reconnectedCallbacks: ((connectionId?: string) => void)[];
 
+    private _upgradedCallbacks: ((event: Event) => void)[];
+
     private _receivedHandshakeResponse: boolean;
     private _handshakeResolver!: (value?: PromiseLike<{}>) => void;
     private _handshakeRejecter!: (reason?: any) => void;
@@ -133,10 +135,12 @@ export class HubConnection {
 
         this.connection.onreceive = (data: any) => this._processIncomingData(data);
         this.connection.onclose = (error?: Error) => this._connectionClosed(error);
+        this.connection.onupgrade = (event: Event) => this._connectionUpgraded(event);
 
         this._callbacks = {};
         this._methods = {};
         this._closedCallbacks = [];
+        this._upgradedCallbacks = [];
         this._reconnectingCallbacks = [];
         this._reconnectedCallbacks = [];
         this._invocationId = 0;
@@ -593,6 +597,16 @@ export class HubConnection {
         }
     }
 
+    /** Registers a handler that will be invoked when the connection is upgraded to websocket.
+     *
+     * @param {Function} callback The handler that will be invoked when the connection is upgraded to websocket.
+     */
+    public onupgraded(callback: (event: Event) => void): void {
+        if (callback) {
+            this._upgradedCallbacks.push(callback);
+        }
+    }
+
     private _processIncomingData(data: any) {
         this._cleanupTimeout();
 
@@ -949,6 +963,15 @@ export class HubConnection {
         this._logger.log(LogLevel.Information, `Reconnect retries have been exhausted after ${Date.now() - reconnectStartTime} ms and ${previousReconnectAttempts} failed attempts. Connection disconnecting.`);
 
         this._completeClose();
+    }
+
+    private _connectionUpgraded(event: Event) {
+        this._logger.log(LogLevel.Debug, `HubConnection.onupgrade called.`);
+        try {
+            this._upgradedCallbacks.forEach((c) => c.apply(this, [event]));
+        } catch (e) {
+            this._logger.log(LogLevel.Error, `An onupgrade callback called with event '${event}' threw error '${e}'.`);
+        }
     }
 
     private _getNextRetryDelay(previousRetryCount: number, elapsedMilliseconds: number, retryReason: Error) {

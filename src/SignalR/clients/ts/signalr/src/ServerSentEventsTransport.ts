@@ -19,6 +19,7 @@ export class ServerSentEventsTransport implements ITransport {
 
     public onreceive: ((data: string | ArrayBuffer) => void) | null;
     public onclose: ((error?: Error | unknown) => void) | null;
+    public onupgrade: ((upgradeEvent: Event) => void) | null;
 
     constructor(httpClient: HttpClient, accessToken: string | undefined, logger: ILogger,
                 options: IHttpConnectionOptions) {
@@ -29,6 +30,7 @@ export class ServerSentEventsTransport implements ITransport {
 
         this.onreceive = null;
         this.onclose = null;
+        this.onupgrade = null;
     }
 
     public async connect(url: string, transferFormat: TransferFormat): Promise<void> {
